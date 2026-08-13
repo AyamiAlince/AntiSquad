@@ -325,7 +325,6 @@
         login: login,
         stamp: stamp,
         height: card.offsetHeight,
-        width: card.offsetWidth,
       });
     }
 
@@ -335,12 +334,12 @@
       if (found.some((other) => other !== item && other.card.contains(item.card))) continue;
 
       const info = readCard(item.card);
-      apply(item.card, rules.check(item.login, info.title, info.tags), item.height, item.width);
+      apply(item.card, rules.check(item.login, info.title, info.tags), item.height);
       item.card.dataset.asToken = item.stamp;
       stamped = true;
     }
 
-    sweepFillers();
+    syncFillers();
     syncPageBlock();
   }
 
@@ -348,7 +347,7 @@
     return card.dataset.asState === 'covered' && !card.querySelector(':scope > .' + PLATE_CLASS);
   }
 
-  function apply(card, verdict, height, width) {
+  function apply(card, verdict, height) {
     // A mark on something inside this card is an answer from before Twitch re-wrapped
     // it. Left alone it shows a second plate through this one.
     card.querySelectorAll('[data-as-state]').forEach(function (inner) {
@@ -367,70 +366,167 @@
       restoreImages(card);
       delete card.dataset.asPos;
       card.dataset.asState = 'hidden';
-      if (sharesWidth(card.parentElement)) addFiller(card, width);
-      else dropFiller(card);
     }
   }
 
-  /**
-   * Containers that hand out their width to whatever is left in them: a grid, or a
-   * row of flex items. A card taken out of one of those makes the rest grow, so
-   * something has to stand in its place.
-   */
-  function sharesWidth(parent) {
-    if (!parent) return false;
-    const style = window.getComputedStyle(parent);
-    if (style.display.indexOf('grid') !== -1) return true;
-    return style.display.indexOf('flex') !== -1 && style.flexDirection.indexOf('row') === 0;
-  }
-
-  /** Card to the stand-in holding its slot, for the containers that need one. */
-  const fillers = new WeakMap();
-  const fillerOwners = new WeakMap();
-
-  function addFiller(card, width) {
-    const parent = card.parentElement;
-    if (!parent) return;
-
-    let filler = fillers.get(card);
-    if (filler && filler.parentElement === parent) return;
-    if (filler) filler.remove();
-
-    filler = document.createElement('div');
-    filler.dataset.asFiller = '';
-    if (width > 0) filler.style.width = width + 'px';
-    // Flex rows divide by what each item asks for, so the stand-in has to ask for
-    // the same as the card it replaces.
-    const style = window.getComputedStyle(card);
-    filler.style.flexGrow = style.flexGrow;
-    filler.style.flexShrink = style.flexShrink;
-    filler.style.flexBasis = style.flexBasis;
-
-    parent.appendChild(filler);
-    fillers.set(card, filler);
-    fillerOwners.set(filler, card);
-  }
-
-  function dropFiller(card) {
-    const filler = fillers.get(card);
-    if (filler) filler.remove();
-    fillers.delete(card);
-  }
+  // ---------------------------------------------------------------- empty slots
 
   /**
-   * Stand-ins whose card is gone — Twitch redrew the shelf, or the rules changed
-   * under it. Cheap: there is one of these per blocked card, not per card.
+   * How much wider the cards that stay may become before anything stands in for
+   * the one that went: a quarter each.
+   *
+   * The two obvious answers are both wrong on their own. Letting the row close up
+   * hands the freed width to whatever is left, and a shelf with all but one card
+   * blocked ends up as a single preview across the page; holding the whole slot
+   * back keeps every card its own size but leaves an empty gap where the card was.
+   * So the cards that stay take a quarter more width each, and only what is over
+   * that goes to a stand-in: one card blocked out of a shelf closes up with no gap
+   * at all, and four out of five still leave the fifth one card-sized.
    */
-  function sweepFillers() {
-    document.querySelectorAll('[data-as-filler]').forEach(function (filler) {
-      const card = fillerOwners.get(filler);
-      const alive =
-        card &&
-        card.isConnected &&
-        card.dataset.asState === 'hidden' &&
-        card.parentElement === filler.parentElement;
-      if (!alive) filler.remove();
+  const GIVE = 0.25;
+
+  /** Containers already asked whether they hand a hidden card's width out. */
+  let spread = new WeakMap();
+
+  // Which they do depends on how wide the window is — Twitch lays a shelf out
+  // differently at every breakpoint — so the answers do not outlive a resize.
+  window.addEventListener('resize', function () {
+    spread = new WeakMap();
+  });
+
+  /**
+   * The stand-ins holding open what the hidden cards gave up.
+   *
+   * Worked out per container rather than per card: how much of the freed width has
+   * to be held back depends on how many cards went and how many are left, and both
+   * change with every pass.
+   */
+  function syncFillers() {
+    const groups = new Map();
+    document.querySelectorAll('[data-as-state="hidden"]').forEach(function (card) {
+      const parent = card.parentElement;
+      if (!parent) return;
+      const group = groups.get(parent);
+      if (group) group.push(card);
+      else groups.set(parent, [card]);
     });
+
+    // Nothing hidden in there any more: Twitch redrew the shelf, or the rules
+    // changed under it.
+    document.querySelectorAll('[data-as-filler]').forEach(function (filler) {
+      if (!groups.has(filler.parentElement)) filler.remove();
+    });
+
+    groups.forEach(holdSlots);
+  }
+
+  function holdSlots(hidden, parent) {
+    const style = window.getComputedStyle(parent);
+    const grid = style.display.indexOf('grid') !== -1;
+    const row = style.display.indexOf('flex') !== -1 && style.flexDirection.indexOf('row') === 0;
+
+    // Everything else — a column, a plain block, a list — simply closes up, and a
+    // stand-in in it would be a hole and nothing else.
+    if ((!grid && !row) || !spreadsWidth(parent, hidden[0])) {
+      keepFillers(parent, 0);
+      return;
+    }
+
+    if (grid) {
+      // A column is dropped when nothing is left in it, so every hidden card needs
+      // something of its own standing in the cell. Size does not come into it:
+      // an empty box holds the track as well as a card does.
+      keepFillers(parent, hidden.length).forEach(function (filler) {
+        filler.style.flex = '';
+      });
+      return;
+    }
+
+    // A flex row divides the freed width in proportion to what its items ask for,
+    // so one stand-in asking for enough of it is all a row ever needs. It asks for
+    // nothing of its own (`flex-basis: 0`): with no width to give away it takes up
+    // no room, and the row looks exactly as if nothing had been blocked.
+    // Read off a card that is still there: it is their growth that is being
+    // capped, and with none left there is nothing to hold the row open for.
+    const live = liveChildren(parent);
+    const grow = live.length ? parseFloat(window.getComputedStyle(live[0]).flexGrow) || 0 : 0;
+    const share = grow * (hidden.length / GIVE - live.length);
+    keepFillers(parent, share > 0 ? 1 : 0).forEach(function (filler) {
+      filler.style.flex = share + ' 0 0px';
+    });
+  }
+
+  /**
+   * Whether [parent] hands the width of a hidden card to the ones that stay.
+   *
+   * A grid with a fixed number of columns does not — the cards after the gap move
+   * up and each keeps its width — while `auto-fit` drops the column left empty and
+   * shares it out. Nothing in the markup tells those two apart, so the page is
+   * asked instead: the card goes back for the length of one measurement, with
+   * nothing painted in between. Asked once per container, since the answer is a
+   * property of how the container is laid out rather than of the card.
+   */
+  function spreadsWidth(parent, card) {
+    const known = spread.get(parent);
+    if (known !== undefined) return known;
+
+    const neighbour = liveChildren(parent)[0];
+    // Everything in there is blocked, so there is nothing to measure against and
+    // nothing to protect either; ask again when a card comes back.
+    if (!neighbour) return false;
+
+    const shared = neighbour.offsetWidth;
+    delete card.dataset.asState;
+    const natural = neighbour.offsetWidth;
+    card.dataset.asState = 'hidden';
+
+    const answer = shared > natural + 1;
+    spread.set(parent, answer);
+    return answer;
+  }
+
+  /** The children of [parent] that still take up a slot in it. */
+  function liveChildren(parent) {
+    const live = [];
+    for (let node = parent.firstElementChild; node; node = node.nextElementSibling) {
+      if (node.dataset.asState === 'hidden' || 'asFiller' in node.dataset) continue;
+      if (node.offsetWidth > 0) live.push(node);
+    }
+    return live;
+  }
+
+  /** Leaves exactly [count] stand-ins in [parent], all of them last, and returns them. */
+  function keepFillers(parent, count) {
+    const kept = [];
+    parent.querySelectorAll(':scope > [data-as-filler]').forEach(function (filler) {
+      if (kept.length < count) kept.push(filler);
+      else filler.remove();
+    });
+    while (kept.length < count) {
+      const filler = document.createElement('div');
+      filler.dataset.asFiller = '';
+      kept.push(filler);
+    }
+
+    // Last, and kept there. Twitch appends the next page of cards to the same
+    // container, and a stand-in that was at the end when it was made ends up
+    // between two cards a scroll later — which is a hole in the middle of the
+    // grid, exactly what it was there to prevent.
+    let tail = parent.lastElementChild;
+    let trailing = true;
+    for (let i = kept.length - 1; i >= 0; i--) {
+      if (kept[i] !== tail) {
+        trailing = false;
+        break;
+      }
+      tail = tail.previousElementSibling;
+    }
+    if (!trailing) {
+      kept.forEach(function (filler) {
+        parent.appendChild(filler);
+      });
+    }
+    return kept;
   }
 
   function cover(card, verdict, height) {
@@ -524,7 +620,6 @@
     if (!card.dataset.asState) return;
     removePlate(card);
     restoreImages(card);
-    dropFiller(card);
     delete card.dataset.asState;
     delete card.dataset.asPos;
   }

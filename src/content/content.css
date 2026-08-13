@@ -21,15 +21,16 @@
 }
 
 /*
- * One of these takes the place of every card hidden out of a grid or a row of flex
- * items, and only there.
+ * A stand-in for what a hidden card gave up, and only where the container would
+ * otherwise hand that width to the cards that are left: an `auto-fit` grid drops
+ * the column it no longer needs, a row of `flex: 1` items grows the rest, and a
+ * shelf with half its cards blocked used to end up as one preview across the page.
  *
- * Those containers share their width out among the items in them: an `auto-fit`
- * grid drops the tracks it no longer needs, a row of `flex: 1` items grows the ones
- * that are left, and a shelf with half its cards blocked ends up as one preview
- * across the page. A stand-in keeps the count — and with it the column widths —
- * while the cards that are left close up around the gap, because it sits at the end.
- * Zero height, so it costs nothing but its slot.
+ * Never a card-shaped hole. In a grid it holds a column and nothing more — the
+ * cards close up around it, since it sits at the end, and it has no height of its
+ * own. In a flex row it is sized to take only the part of the freed width the
+ * remaining cards are not allowed to grow into (see `GIVE` in content.js), so a
+ * shelf that lost one card out of six closes up without a gap at all.
  */
 [data-as-filler] {
   visibility: hidden !important;
