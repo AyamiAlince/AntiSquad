@@ -1,0 +1,175 @@
+/*
+ * The two things a blocked card can look like, plus the channel-page plate.
+ *
+ * Flat red rather than a blur or a dim: a darkened thumbnail still reads as a
+ * thumbnail, and the whole point is that the viewer does not have to look at it.
+ */
+
+/*
+ * A card is marked with a data attribute rather than a class, and the styling hangs
+ * off that attribute.
+ *
+ * Twitch's cards are React components with a `className` prop: whenever one of them
+ * re-renders with a different class string, React writes the whole attribute and
+ * any class of ours in it is gone. Losing `position: relative` that way is not a
+ * small thing — the plate then stretches to the nearest positioned ancestor, which
+ * on the front page is the box around a whole shelf. React never writes attributes
+ * it does not know about, so `data-as-state` survives what `class` does not.
+ */
+[data-as-state="hidden"] {
+  display: none !important;
+}
+
+/*
+ * One of these takes the place of every card hidden out of a grid or a row of flex
+ * items, and only there.
+ *
+ * Those containers share their width out among the items in them: an `auto-fit`
+ * grid drops the tracks it no longer needs, a row of `flex: 1` items grows the ones
+ * that are left, and a shelf with half its cards blocked ends up as one preview
+ * across the page. A stand-in keeps the count — and with it the column widths —
+ * while the cards that are left close up around the gap, because it sits at the end.
+ * Zero height, so it costs nothing but its slot.
+ */
+[data-as-filler] {
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+
+/*
+ * Set only on cards that are `position: static`, where relative positioning changes
+ * nothing on screen and only gives the plate something to size itself against.
+ * Forcing it on an element Twitch positions itself — a carousel slide, say — would
+ * take it out of the place it was put in.
+ */
+[data-as-pos="1"] {
+  position: relative !important;
+}
+
+.as-plate {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  overflow: hidden;
+  border-radius: inherit;
+  background: #8e1616;
+  color: #fff;
+  text-align: center;
+  cursor: not-allowed;
+  user-select: none;
+}
+
+.as-plate__caption {
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+.as-plate__detail {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 15px;
+  color: rgba(255, 255, 255, 0.85);
+  overflow-wrap: anywhere;
+}
+
+/* Side-nav cards are about 40 px tall: the plate has to shrink or say nothing. */
+.as-plate--compact {
+  padding: 2px 6px;
+  gap: 0;
+}
+
+.as-plate--compact .as-plate__caption {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 10px;
+  line-height: 12px;
+}
+
+.as-plate--compact .as-plate__detail {
+  -webkit-line-clamp: 1;
+  font-size: 10px;
+  line-height: 12px;
+}
+
+/* The channel page itself, reached by URL rather than by a card. */
+.as-page {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(10, 10, 12, 0.97);
+  font-family: Inter, Roobert, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.as-page__panel {
+  box-sizing: border-box;
+  max-width: 560px;
+  width: 100%;
+  padding: 28px 32px;
+  border-radius: 8px;
+  background: #8e1616;
+  color: #fff;
+  text-align: center;
+}
+
+.as-page__caption {
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.as-page__detail {
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 20px;
+  color: rgba(255, 255, 255, 0.85);
+  overflow-wrap: anywhere;
+}
+
+.as-page__channel {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 18px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.as-page__back {
+  margin-top: 20px;
+  padding: 8px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.as-page__back:hover {
+  background: rgba(255, 255, 255, 0.12);
+}

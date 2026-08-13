@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AntiSquad</title>
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <header class="head">
+      <div>
+        <div class="head__title">AntiSquad</div>
+        <div class="head__hint" id="summary"></div>
+      </div>
+      <label class="switch" title="Блокировка включена">
+        <input type="checkbox" id="enabled" aria-label="Блокировка включена" />
+        <span class="switch__track"><span class="switch__knob"></span></span>
+      </label>
+    </header>
+
+    <main>
+      <section>
+        <h2>Что делать с заблокированным</h2>
+        <div class="rows" id="modes"></div>
+      </section>
+
+      <section>
+        <h2>Слова на карточке трансляции</h2>
+        <p class="note">
+          Трансляция блокируется, если слово встречается в названии, тегах, категории
+          или имени канала — целиком или частью, регистр не важен. Чат не
+          затрагивается.
+        </p>
+        <div class="rows" id="words"></div>
+        <form class="add" id="word-form">
+          <input id="word-input" type="text" placeholder="например, 89squad" autocomplete="off" />
+          <button type="submit">Добавить</button>
+        </form>
+      </section>
+
+      <section>
+        <h2>Команды Twitch</h2>
+        <p class="note">
+          Блокируются все участники команды — и их эфиры, и сами каналы в поиске и в
+          боковом меню. Имя команды — это последняя часть адреса
+          <code>twitch.tv/team/…</code>, ссылку можно вставить целиком. Состав
+          перечитывается раз в сутки и хранится в браузере, поэтому работает и до
+          подключения к сети.
+        </p>
+        <div class="rows" id="teams"></div>
+        <form class="add" id="team-form">
+          <input
+            id="team-input"
+            type="text"
+            placeholder="89squad или twitch.tv/team/89squad"
+            autocomplete="off"
+          />
+          <button type="submit">Добавить</button>
+        </form>
+        <div class="foot">
+          <span id="teams-status"></span>
+          <button type="button" class="link" id="refresh">Обновить составы</button>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal" id="confirm" hidden>
+      <div class="modal__box" role="alertdialog" aria-modal="true">
+        <div class="modal__title" id="confirm-title"></div>
+        <div class="modal__text" id="confirm-text"></div>
+        <div class="modal__buttons">
+          <button type="button" id="confirm-cancel">Отмена</button>
+          <button type="button" class="danger" id="confirm-ok">Убрать</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../common/browser.js"></script>
+    <script src="../common/settings.js"></script>
+    <script src="../common/teams.js"></script>
+    <script src="panel.js"></script>
+  </body>
+</html>

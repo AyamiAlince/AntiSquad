@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "AntiSquad — блокировка на Twitch",
+  "version": "1.0.0",
+  "description": "Убирает команды Twitch целиком — всех участников разом — и трансляции по словам: скрывает или закрывает красной заглушкой.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.twitch.tv/*",
+        "https://twitch.tv/*",
+        "https://m.twitch.tv/*"
+      ],
+      "js": [
+        "src/common/browser.js",
+        "src/common/settings.js",
+        "src/common/rules.js",
+        "src/common/teams.js",
+        "src/content/content.js"
+      ],
+      "css": ["src/content/content.css"],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+  "action": {
+    "default_popup": "src/ui/panel.html",
+    "default_title": "AntiSquad — блокировка на Twitch",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_ui": {
+    "page": "src/ui/panel.html",
+    "open_in_tab": true
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "antisquad@ayami.dev",
+      "strict_min_version": "115.0"
+    }
+  }
+}

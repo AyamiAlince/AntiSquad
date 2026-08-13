@@ -1,0 +1,326 @@
+/* Twitch's own dark palette, so the popup does not look like a stranger. */
+:root {
+  --bg: #0e0e10;
+  --surface: #18181b;
+  --surface-hover: #1f1f23;
+  --line: #2f2f35;
+  --text: #efeff1;
+  --muted: #adadb8;
+  --accent: #9147ff;
+  --danger: #8e1616;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 400px;
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, Roobert, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* The same page is the popup and the options page; in a tab it may breathe. */
+body.wide {
+  width: auto;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 8px 16px 32px;
+}
+
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.head__title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.head__hint {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.switch {
+  flex: none;
+  cursor: pointer;
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch__track {
+  display: block;
+  width: 42px;
+  height: 24px;
+  padding: 3px;
+  border-radius: 999px;
+  background: #3a3a3f;
+  transition: background 0.12s ease;
+}
+
+.switch__knob {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #efeff1;
+  transition: transform 0.12s ease;
+}
+
+.switch input:checked + .switch__track {
+  background: var(--accent);
+}
+
+.switch input:checked + .switch__track .switch__knob {
+  transform: translateX(18px);
+}
+
+.switch input:focus-visible + .switch__track {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+main {
+  padding: 4px 16px 16px;
+}
+
+body.wide main {
+  padding-inline: 0;
+}
+
+section {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+section:last-of-type {
+  border-bottom: 0;
+}
+
+h2 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.note {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.note code {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--surface-hover);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.row--selected {
+  border-color: var(--accent);
+}
+
+.row__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.row__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.row__subtitle {
+  margin-top: 1px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.row__mark {
+  flex: none;
+  width: 16px;
+  text-align: center;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.row--removable .row__mark {
+  color: #d26969;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.empty {
+  padding: 2px 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.add {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.add input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #000;
+  color: var(--text);
+  font: inherit;
+}
+
+.add input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+button {
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.12);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+  filter: none;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.link {
+  padding: 0;
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.link:hover {
+  filter: none;
+  color: #a970ff;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.modal[hidden] {
+  display: none;
+}
+
+.modal__box {
+  width: 100%;
+  max-width: 340px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.modal__title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.modal__text {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.modal__buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.modal__buttons button {
+  background: #3a3a3f;
+}
+
+.modal__buttons .danger {
+  background: var(--danger);
+}
