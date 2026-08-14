@@ -9,17 +9,12 @@
 (function () {
   'use strict';
 
-  /** Why something is blocked; the text is the headline on the red plate. */
-  AS.CAPTIONS = {
-    word: 'ЗАБЛОКИРОВАНО ПО ТЕГУ',
-    team: 'НЕДОСТУПНО — ЗАБЛОКИРОВАННАЯ КОМАНДА',
-  };
-
   /**
    * @param {{mode: string, words: string[], rosters: Object<string, string[]>}} input
    */
   AS.makeRules = function (input) {
     const mode = input.mode || 'hide';
+    const lang = input.lang || 'en';
     const words = AS.cleanList(input.words);
 
     /**
@@ -58,7 +53,7 @@
         const key = String(login || '').toLowerCase();
         if (key) {
           const teams = teamsByLogin.get(key);
-          if (teams) return verdict('team', teams);
+          if (teams) return verdict('team', teams, lang);
         }
         if (words.length === 0) return null;
 
@@ -77,7 +72,7 @@
             tagIndex >= 0 ? cleanTags[tagIndex] : loweredTitle.indexOf(word) !== -1 ? word : null;
           if (hit && matched.indexOf(hit) === -1) matched.push(hit);
         }
-        return matched.length === 0 ? null : verdict('word', matched);
+        return matched.length === 0 ? null : verdict('word', matched, lang);
       },
     };
   };
@@ -90,12 +85,13 @@
    * blocked, which is no help at all when a card disappears and the viewer wants to
    * know which of their own rules to loosen.
    */
-  function verdict(reason, matched) {
+  function verdict(reason, matched, lang) {
     return {
       reason: reason,
-      caption: AS.CAPTIONS[reason],
+      caption: AS.translate('caption_' + reason, lang),
       matched: matched,
       detail: matched.join(', '),
+      lang: lang
     };
   }
 })();

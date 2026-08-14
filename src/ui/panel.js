@@ -22,6 +22,41 @@
 
   function render() {
     el('enabled').checked = settings.enabled;
+    
+   // Language selector
+    const select = el('lang-select');
+    if (select.children.length === 0) {
+      for (const langCode in AS.LOCALES) {
+        const option = document.createElement('option');
+        option.value = langCode;
+        option.textContent = AS.LOCALES[langCode].lang_name || langCode;
+        select.appendChild(option);
+      }
+    }
+
+    el('lang-select').value = settings.lang;
+
+    // Static elements
+    el('i18n-lang-title').textContent = AS.translate('settings_lang', settings.lang);
+    el('i18n-modes').textContent = AS.translate('section_modes', settings.lang);
+    el('i18n-words').textContent = AS.translate('section_words', settings.lang);
+    el('i18n-words-note').textContent = AS.translate('words_note', settings.lang);
+    el('i18n-teams').textContent = AS.translate('section_teams', settings.lang);
+    el('i18n-teams-note').textContent = AS.translate('teams_note', settings.lang);
+    
+    // Placeholders & buttons
+    el('word-input').placeholder = AS.translate('word_placeholder', settings.lang);
+    el('team-input').placeholder = AS.translate('team_placeholder', settings.lang);
+    el('refresh').textContent = AS.translate('btn_refresh', settings.lang);
+    el('confirm-cancel').textContent = AS.translate('modal_cancel', settings.lang);
+    el('confirm-ok').textContent = AS.translate('modal_remove', settings.lang);
+
+    // "Add" Button translation
+    document.querySelectorAll('.add button').forEach(function(btn) {
+      btn.textContent = AS.translate('btn_add', settings.lang);
+    });
+
+    // Dynamic rendering
     renderSummary();
     renderModes();
     renderList('words', settings.words, wordRow);
@@ -31,7 +66,7 @@
 
   function renderSummary() {
     if (!settings.enabled) {
-      el('summary').textContent = 'Выключена — списки сохранены';
+      el('summary').textContent = AS.translate('summary_off', settings.lang);
       return;
     }
     const logins = new Set();
@@ -39,8 +74,8 @@
       for (const login of (cache[name] || {}).logins || []) logins.add(login);
     }
     const parts = [];
-    parts.push(settings.words.length ? 'слов: ' + settings.words.length : 'слов нет');
-    parts.push(logins.size ? 'каналов по командам: ' + logins.size : 'команд нет');
+    parts.push(settings.words.length ? AS.translate('words_count', settings.lang, settings.words.length) : AS.translate('words_empty', settings.lang));
+    parts.push(logins.size ? AS.translate('teams_count', settings.lang, logins.size) : AS.translate('teams_empty', settings.lang));
     el('summary').textContent = parts.join(' · ');
   }
 
@@ -48,7 +83,10 @@
     const box = el('modes');
     box.textContent = '';
     for (const mode of AS.MODES) {
-      const row = buildRow(mode.label, mode.blurb, settings.mode === mode.id ? '✓' : '');
+      const label = AS.translate('mode_' + mode.id, settings.lang);
+      const blurb = AS.translate('mode_' + mode.id + '_blurb', settings.lang);
+      
+      const row = buildRow(label, blurb, settings.mode === mode.id ? '✓' : '');
       row.classList.toggle('row--selected', settings.mode === mode.id);
       row.addEventListener('click', function () {
         save({ mode: mode.id });
@@ -63,10 +101,7 @@
     if (values.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'empty';
-      empty.textContent =
-        id === 'words'
-          ? 'Список пуст — по словам ничего не блокируется.'
-          : 'Ни одной команды не заблокировано.';
+      empty.textContent = AS.translate(id === 'words' ? 'words_empty_list' : 'teams_empty_list', settings.lang);
       box.appendChild(empty);
       return;
     }
@@ -74,7 +109,7 @@
   }
 
   function wordRow(word) {
-    const row = buildRow(word, 'Нажмите, чтобы убрать из списка', '×');
+    const row = buildRow(word, AS.translate('word_subtitle', settings.lang), '×');
     row.classList.add('row--removable');
     row.addEventListener('click', function () {
       ask(word, false);
@@ -87,10 +122,10 @@
     const size = known ? (known.logins || []).length : null;
     const subtitle =
       size === null
-        ? 'Состав ещё не загружен'
+        ? AS.translate('team_not_loaded', settings.lang)
         : size === 0
-          ? 'Twitch не знает такой команды — проверьте имя'
-          : 'Участников: ' + size + ' · нажмите, чтобы убрать';
+          ? AS.translate('team_unknown', settings.lang)
+          : AS.translate('team_members_count', settings.lang, size);
 
     const row = buildRow(known && known.displayName ? known.displayName : team, subtitle, '×');
     row.classList.add('row--removable');
@@ -133,8 +168,8 @@
       return !cache[name];
     });
     el('teams-status').textContent = stale.length
-      ? 'Читаю составы: ' + stale.join(', ')
-      : 'Составы обновляются раз в сутки';
+      ? AS.translate('teams_status_reading', settings.lang, stale.join(', '))
+      : AS.translate('teams_status_ok', settings.lang);
   }
 
   // ---------------------------------------------------------------- editing
@@ -149,11 +184,11 @@
   function ask(value, isTeam) {
     pending = { value: value, team: isTeam };
     el('confirm-title').textContent = isTeam
-      ? 'Разблокировать команду «' + value + '»?'
-      : 'Убрать слово «' + value + '»?';
+      ? AS.translate('confirm_team_title', settings.lang, value)
+      : AS.translate('confirm_word_title', settings.lang, value);
     el('confirm-text').textContent = isTeam
-      ? 'Её участники снова появятся в списках и в поиске.'
-      : 'Трансляции с этим словом снова будут показываться.';
+      ? AS.translate('confirm_team_text', settings.lang)
+      : AS.translate('confirm_word_text', settings.lang);
     el('confirm').hidden = false;
     el('confirm-ok').focus();
   }
@@ -181,6 +216,7 @@
 
   async function reload() {
     settings = await AS.loadSettings();
+    await AS.loadAllTranslations();
     cache = await AS.loadTeamCache();
     render();
   }
@@ -231,6 +267,10 @@
       .finally(function () {
         button.disabled = false;
       });
+  });
+
+  el('lang-select').addEventListener('change', function (event) {
+    save({ lang: event.target.value });
   });
 
   // The content script writes the roster cache; the popup may be open at the time.

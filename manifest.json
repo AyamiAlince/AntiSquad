@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AntiSquad — блокировка на Twitch",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Убирает команды Twitch целиком — всех участников разом — и трансляции по словам: скрывает или закрывает красной заглушкой.",
   "icons": {
     "16": "icons/icon16.png",
@@ -22,6 +22,11 @@
         "src/common/settings.js",
         "src/common/rules.js",
         "src/common/teams.js",
+        "src/common/localization.js",
+
+        "src/common/locales/en.js", 
+        "src/common/locales/ru.js",
+        
         "src/content/content.js"
       ],
       "css": ["src/content/content.css"],

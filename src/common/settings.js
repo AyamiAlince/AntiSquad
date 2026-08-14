@@ -20,6 +20,8 @@
     words: ['89squad', 'pitomnik'],
     /** Team names as in `twitch.tv/team/<name>`; every member is blocked. */
     teams: ['89squad', 'pitomnik'],
+    /** Default language for the plugin; English by default. */
+    lang: 'en'
   };
 
   /** What happens to a stream that matches a block rule. */
@@ -79,10 +81,17 @@
 
   function normalize(raw) {
     const stored = Object.assign({}, AS.DEFAULTS, raw || {});
+    
+    // Scan for available languages
+    const availableLangs = AS.LOCALES ? Object.keys(AS.LOCALES) : ['en'];
+    const sysLang = navigator.language.slice(0, 2);
+    const fallbackLang = availableLangs.indexOf(sysLang) !== -1 ? sysLang : 'en';
+
     const mode = AS.MODES.some((m) => m.id === stored.mode) ? stored.mode : AS.DEFAULTS.mode;
     return {
       enabled: stored.enabled !== false,
       mode: mode,
+      lang: stored.lang || fallbackLang,
       words: AS.cleanList(Array.isArray(stored.words) ? stored.words : AS.DEFAULTS.words),
       teams: AS.cleanList(
         (Array.isArray(stored.teams) ? stored.teams : AS.DEFAULTS.teams).map(AS.teamName),
