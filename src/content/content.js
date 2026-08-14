@@ -84,13 +84,22 @@
     const rosters = AS.rostersFrom(settings.teams, cache);
 
     enabled = settings.enabled;
-    rules = AS.makeRules({ mode: settings.mode, words: settings.words, rosters: rosters });
+    rules = AS.makeRules({
+      mode: settings.mode,
+      words: settings.words,
+      rosters: rosters,
+      lang: settings.lang,
+    });
 
     // Only a real change in the verdict a card would get is worth re-judging every
     // card on screen, so the stamp is a signature of the inputs, not a timestamp.
+    // The language is one of those inputs — it is the text on the plate — so a
+    // switch in the settings has to invalidate every stamp, or the plates already
+    // on screen would keep the wording they were drawn with.
     const signature = JSON.stringify([
       enabled,
       settings.mode,
+      settings.lang,
       settings.words,
       Object.keys(rosters).map((team) => team + ':' + rosters[team].length),
     ]);
@@ -679,7 +688,7 @@
         '<div class="as-page__caption"></div>' +
         '<div class="as-page__detail"></div>' +
         '<div class="as-page__channel"></div>' +
-        '<button type="button" class="as-page__back">' + AS.translate('btn_go_back', verdict.lang) + '</button>' +
+        '<button type="button" class="as-page__back"></button>' +
         '</div>';
       pageBlock.querySelector('.as-page__back').addEventListener('click', function () {
         if (history.length > 1) history.back();
@@ -693,6 +702,9 @@
     pageBlock.querySelector('.as-page__caption').textContent = verdict.caption;
     pageBlock.querySelector('.as-page__detail').textContent = verdict.detail;
     pageBlock.querySelector('.as-page__channel').textContent = 'twitch.tv/' + login;
+    // The panel outlives a change in the settings — it is only torn down when the
+    // address changes — so its own label is re-read on every pass, not just once.
+    pageBlock.querySelector('.as-page__back').textContent = AS.translate('btn_go_back', verdict.lang);
     pauseEverything();
   }
 
