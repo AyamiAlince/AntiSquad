@@ -20,13 +20,18 @@
 
     <main>
       <section>
-        <h2>Что делать с заблокированным</h2>
+        <h2 id="i18n-lang-title">Язык интерфейса</h2>
+        <select id="lang-select" class="select"></select>
+      </section>
+
+      <section>
+        <h2 id="i18n-modes">Что делать с заблокированным</h2>
         <div class="rows" id="modes"></div>
       </section>
 
       <section>
-        <h2>Слова на карточке трансляции</h2>
-        <p class="note">
+        <h2 id="i18n-words">Слова на карточке трансляции</h2>
+        <p class="note" id="i18n-words-note">
           Трансляция блокируется, если слово встречается в названии, тегах, категории
           или имени канала — целиком или частью, регистр не важен. Чат не
           затрагивается.
@@ -39,8 +44,8 @@
       </section>
 
       <section>
-        <h2>Команды Twitch</h2>
-        <p class="note">
+        <h2 id="i18n-teams">Команды Twitch</h2>
+        <p class="note" id="i18n-teams-note">
           Блокируются все участники команды — и их эфиры, и сами каналы в поиске и в
           боковом меню. Имя команды — это последняя часть адреса
           <code>twitch.tv/team/…</code>, ссылку можно вставить целиком. Состав
@@ -78,6 +83,7 @@
     <script src="../common/browser.js"></script>
     <script src="../common/settings.js"></script>
     <script src="../common/teams.js"></script>
+    <script src="../common/localization.js"></script>
     <script src="panel.js"></script>
   </body>
 </html>

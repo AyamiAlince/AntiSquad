@@ -679,7 +679,7 @@
         '<div class="as-page__caption"></div>' +
         '<div class="as-page__detail"></div>' +
         '<div class="as-page__channel"></div>' +
-        '<button type="button" class="as-page__back">Вернуться назад</button>' +
+        '<button type="button" class="as-page__back">' + AS.translate('btn_go_back', verdict.lang) + '</button>' +
         '</div>';
       pageBlock.querySelector('.as-page__back').addEventListener('click', function () {
         if (history.length > 1) history.back();
