@@ -796,9 +796,9 @@
       card.appendChild(plate);
     }
     plate.classList.toggle('as-plate--compact', compact);
-    plate.firstChild.textContent = verdict.caption;
-    plate.lastChild.textContent = verdict.detail;
-    plate.lastChild.hidden = !verdict.detail;
+    plate.querySelector('.as-plate__caption').textContent = verdict.caption;
+    plate.querySelector('.as-plate__detail').textContent = verdict.detail;
+    plate.querySelector('.as-plate__detail').hidden = !verdict.detail;
 
     stripImages(card);
   }
@@ -807,6 +807,10 @@
     const plate = document.createElement('div');
     plate.className = PLATE_CLASS;
     plate.dataset.asPlate = '';
+
+    const icon = document.createElement('div');
+    icon.className = 'icon-cover as-plate__icon';
+    plate.appendChild(icon);
 
     const caption = document.createElement('div');
     caption.className = 'as-plate__caption';
@@ -929,6 +933,7 @@
       pageBlock.className = 'as-page';
       pageBlock.innerHTML =
         '<div class="as-page__panel">' +
+        '<div class="icon-cover as-page__icon"></div>' +
         '<div class="as-page__caption"></div>' +
         '<div class="as-page__detail"></div>' +
         '<div class="as-page__channel"></div>' +

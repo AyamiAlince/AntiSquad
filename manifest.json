@@ -35,6 +35,19 @@
       "all_frames": true
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/ui/*.svg"
+      ],
+      "matches": [
+        "https://www.twitch.tv/*",
+        "https://twitch.tv/*",
+        "https://m.twitch.tv/*",
+        "https://dashboard.twitch.tv/*"
+      ]
+    }
+  ],
   "action": {
     "default_popup": "src/ui/panel.html",
     "default_title": "AntiSquad — блокировка на Twitch",
