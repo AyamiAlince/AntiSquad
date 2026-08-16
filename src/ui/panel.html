@@ -20,17 +20,26 @@
 
     <main>
       <section>
-        <h2 id="i18n-lang-title">Язык интерфейса</h2>
+        <div class="section-title">
+          <span class="icon-language"></span>
+          <h2 id="i18n-lang-title">Язык интерфейса</h2>
+        </div>
         <select id="lang-select" class="select"></select>
       </section>
 
       <section>
-        <h2 id="i18n-modes">Что делать с заблокированным</h2>
+        <div class="section-title">
+          <span class="icon-action"></span>
+          <h2 id="i18n-modes">Что делать с заблокированным</h2>
+        </div>
         <div class="rows" id="modes"></div>
       </section>
 
       <section>
-        <h2 id="i18n-words">Слова на карточке трансляции</h2>
+        <div class="section-title">
+          <span class="icon-tag"></span>
+          <h2 id="i18n-words">Слова на карточке трансляции</h2>
+        </div>
         <p class="note" id="i18n-words-note">
           Трансляция блокируется, если слово встречается в названии, тегах, категории
           или имени канала — целиком или частью, регистр не важен. Чат не
@@ -39,12 +48,15 @@
         <div class="rows" id="words"></div>
         <form class="add" id="word-form">
           <input id="word-input" type="text" placeholder="например, 89squad" autocomplete="off" />
-          <button type="submit">Добавить</button>
+          <button type="submit"><span class="icon-add"></span> Добавить</button>
         </form>
       </section>
 
       <section>
-        <h2 id="i18n-teams">Команды Twitch</h2>
+        <div class="section-title">
+          <span class="icon-team"></span>
+          <h2 id="i18n-teams">Команды Twitch</h2>
+        </div>
         <p class="note" id="i18n-teams-note">
           Блокируются все участники команды — и их эфиры, и сами каналы в поиске и в
           боковом меню. Имя команды — это последняя часть адреса
@@ -60,7 +72,7 @@
             placeholder="89squad или twitch.tv/team/89squad"
             autocomplete="off"
           />
-          <button type="submit">Добавить</button>
+          <button type="submit"><span class="icon-add"></span>Добавить</button>
         </form>
         <div class="foot">
           <span id="teams-status"></span>

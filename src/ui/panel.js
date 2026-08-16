@@ -53,7 +53,8 @@
 
     // "Add" Button translation
     document.querySelectorAll('.add button').forEach(function(btn) {
-      btn.textContent = AS.translate('btn_add', settings.lang);
+      const translatedText = AS.translate('btn_add', settings.lang);
+      btn.innerHTML = '<span class="icon-add"></span>' + translatedText;
     });
 
     // Dynamic rendering
@@ -85,8 +86,12 @@
     for (const mode of AS.MODES) {
       const label = AS.translate('mode_' + mode.id, settings.lang);
       const blurb = AS.translate('mode_' + mode.id + '_blurb', settings.lang);
-      
-      const row = buildRow(label, blurb, settings.mode === mode.id ? '✓' : '');
+    
+      const markClass = settings.mode === mode.id ? 'icon-check' : '';
+      const leftIconClass = 'icon-' + mode.id;
+    
+      const row = buildRow(label, blurb, markClass, leftIconClass);
+    
       row.classList.toggle('row--selected', settings.mode === mode.id);
       row.addEventListener('click', function () {
         save({ mode: mode.id });
@@ -135,10 +140,16 @@
     return row;
   }
 
-  function buildRow(title, subtitle, mark) {
+  function buildRow(title, subtitle, mark, leftIconClass) {
     const row = document.createElement('button');
     row.type = 'button';
     row.className = 'row';
+
+    if (leftIconClass) {
+      const leftIcon = document.createElement('span');
+      leftIcon.className = leftIconClass;
+      row.appendChild(leftIcon);
+    }
 
     const body = document.createElement('div');
     body.className = 'row__body';
@@ -158,8 +169,18 @@
 
     const markNode = document.createElement('div');
     markNode.className = 'row__mark';
-    markNode.textContent = mark;
+  
+    if (mark) {
+      if (mark.startsWith('icon-')) {
+        const markIcon = document.createElement('span');
+        markIcon.className = mark;
+        markNode.appendChild(markIcon);
+      } else {
+        markNode.textContent = mark;
+      }
+    }
     row.appendChild(markNode);
+
     return row;
   }
 
