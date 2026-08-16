@@ -113,6 +113,24 @@
   line-height: 12px;
 }
 
+/*
+ * A blocked chat line.
+ *
+ * The plate takes the line's own box, so the column keeps its rhythm: nothing
+ * jumps when a message is covered, and a hidden one closes up behind itself. It
+ * reads from the left like the messages around it, and the floor is there for a
+ * one-word line, which can be shorter than the caption on top of it.
+ */
+[data-as-chat][data-as-state="covered"] {
+  min-height: 22px;
+}
+
+[data-as-chat] > .as-plate {
+  align-items: flex-start;
+  text-align: left;
+  border-radius: 4px;
+}
+
 /* The channel page itself, reached by URL rather than by a card. */
 .as-page {
   position: fixed;

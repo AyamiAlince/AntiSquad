@@ -74,6 +74,47 @@
         }
         return matched.length === 0 ? null : verdict('word', matched, lang);
       },
+
+      /**
+       * Why this chat message is blocked, or null if it is not.
+       *
+       * Three ways in, in the order they answer "why is this line here at all".
+       * The author is on a blocked roster; the message names one of them; or it
+       * trips over a word.
+       *
+       * Mentions are checked against rosters only. Blocking a team blocks people,
+       * and a chat that says `@lomaka` twice a minute puts back exactly what the
+       * viewer asked to be rid of; the word list needs no such help, since it is
+       * already matched against the whole line, the author's name included.
+       *
+       * @returns {{reason: string, caption: string, matched: string[], detail: string}|null}
+       */
+      checkMessage: function (author, text, mentions) {
+        const key = String(author || '').toLowerCase();
+        if (key) {
+          const teams = teamsByLogin.get(key);
+          if (teams) return verdict('chat_team', teams, lang);
+        }
+
+        // The team, not the login that was mentioned: the team is the rule the
+        // viewer would have to loosen, and one message can name two of its members.
+        const named = [];
+        for (const raw of mentions || []) {
+          const teams = teamsByLogin.get(String(raw).toLowerCase());
+          if (!teams) continue;
+          for (const team of teams) if (named.indexOf(team) === -1) named.push(team);
+        }
+        if (named.length !== 0) return verdict('chat_mention', named, lang);
+
+        if (words.length === 0) return null;
+
+        const lowered = String(text || '').toLowerCase();
+        const matched = [];
+        for (const word of words) {
+          if (lowered.indexOf(word) !== -1 && matched.indexOf(word) === -1) matched.push(word);
+        }
+        return matched.length === 0 ? null : verdict('chat_word', matched, lang);
+      },
     };
   };
 

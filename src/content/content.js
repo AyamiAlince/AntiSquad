@@ -34,12 +34,18 @@
   const SEEDS = 'a[href]';
 
   /**
-   * Chat is left alone, as in the app: a mention of a blocked channel is not a card,
-   * and hiding the line it sits on would be a surprise.
+   * Chat is judged as messages, not as cards, so the card walk stops at its door.
+   *
+   * A link to a channel inside a message is not a card — the walk up from it would
+   * mark the line, or the block of lines around it, as though it were one. What
+   * happens to that message is decided in the chat pass instead, which runs first
+   * and leaves `data-as-chat` behind on every line it has looked at.
    */
   const CHAT =
-    '[data-a-target="chat-scroller"], [data-test-selector="chat-scrollable-area__message-container"],' +
-    ' .chat-scrollable-area__message-container, [data-a-target="chat-input"], .chat-line__message';
+    '[data-as-chat], [data-a-target="chat-scroller"],' +
+    ' [data-test-selector="chat-scrollable-area__message-container"],' +
+    ' .chat-scrollable-area__message-container, [data-a-target="chat-input"], .chat-line__message,' +
+    ' [data-a-target="chat-line-message"], .video-chat__message-list-wrapper';
 
   /**
    * The ascent from a link to its card never crosses one of these. They are the
@@ -84,13 +90,22 @@
     const rosters = AS.rostersFrom(settings.teams, cache);
 
     enabled = settings.enabled;
-    rules = AS.makeRules({ mode: settings.mode, words: settings.words, rosters: rosters });
+    rules = AS.makeRules({
+      mode: settings.mode,
+      words: settings.words,
+      rosters: rosters,
+      lang: settings.lang,
+    });
 
     // Only a real change in the verdict a card would get is worth re-judging every
     // card on screen, so the stamp is a signature of the inputs, not a timestamp.
+    // The language is one of those inputs — it is the text on the plate — so a
+    // switch in the settings has to invalidate every stamp, or the plates already
+    // on screen would keep the wording they were drawn with.
     const signature = JSON.stringify([
       enabled,
       settings.mode,
+      settings.lang,
       settings.words,
       Object.keys(rosters).map((team) => team + ':' + rosters[team].length),
     ]);
@@ -271,7 +286,7 @@
       push(node.getAttribute('alt'));
       push(node.getAttribute('aria-label'));
     });
-    push((card.textContent || '').slice(0, 400));
+    push(ownText(card));
 
     // Best effort, and only for the plate's second line: when the hit came from a
     // tag it reads better to name the tag the way the streamer wrote it.
@@ -286,6 +301,26 @@
     return { title: parts.join(' · '), tags: tags };
   }
 
+  /**
+   * The text of [node] without the plate we may have put on it.
+   *
+   * A covered card is read again whenever the rules change, and the plate is a
+   * child of it by then: left in, its own caption and the words it names would be
+   * matched as though the card said them, and a card could go on being blocked by
+   * the very plate that says it is blocked. The cap is what a chat message can be
+   * at its longest, a little over Twitch's 500 characters.
+   */
+  function ownText(node) {
+    const plate = node.querySelector(':scope > .' + PLATE_CLASS);
+    if (!plate) return (node.textContent || '').slice(0, 600);
+
+    let text = '';
+    for (let part = node.firstChild; part && text.length < 600; part = part.nextSibling) {
+      if (part !== plate) text += part.textContent || '';
+    }
+    return text.slice(0, 600);
+  }
+
   // ---------------------------------------------------------------- applying
 
   function scan() {
@@ -298,6 +333,11 @@
       clearAll();
       return;
     }
+
+    // Chat first: it marks the lines it has looked at, and the card walk is told to
+    // stop at those. A message with a link to a channel in it would otherwise be
+    // read as a card and taken away by the wrong rule.
+    scanChat();
 
     // Two passes on purpose. Working out where a card ends measures elements, and
     // marking one changes them; interleaved, every card would make the browser lay
@@ -369,6 +409,213 @@
     }
   }
 
+  // ---------------------------------------------------------------- chat
+
+  /**
+   * Chat lines, judged one by one.
+   *
+   * Nothing here can lean on an address the way the card pass does: a line names
+   * its author in an attribute, not in a link, so Twitch's own analytics
+   * attributes are the anchor — `data-a-user` on the line and on the name, and
+   * the message containers as a second way in. Between the two a rename on either
+   * side still leaves the other one finding the line.
+   */
+  const CHAT_NAMES =
+    '[data-a-target="chat-message-username"], .chat-author__display-name,' +
+    ' .video-chat__message-author, [data-test-selector="message-username"]';
+
+  const CHAT_SEEDS = '[data-a-user], ' + CHAT_NAMES;
+
+  /** Containers whose element children are one message each. */
+  const CHAT_LISTS =
+    '.chat-scrollable-area__message-container,' +
+    ' [data-test-selector="chat-scrollable-area__message-container"],' +
+    ' .video-chat__message-list-wrapper ul, [data-test-selector="video-chat"] ul';
+
+  /** The walk from a name up to its line never crosses one of these. */
+  const CHAT_STOPS =
+    CHAT_LISTS +
+    ', section, main, aside, ul, ol, [role="log"], [role="list"],' +
+    ' [data-a-target="chat-scroller"], .chat-list--default, .chat-list--other';
+
+  /**
+   * Things that sit beside the message list and never inside a message. An
+   * element with one of them in it is the chat room, not a line in it — which is
+   * what stops the walk in a room that happens to hold a single message.
+   */
+  const CHAT_FURNITURE =
+    '[data-a-target="chat-input"], .chat-input, [data-a-target="chat-scroller"],' +
+    ' .chat-scrollable-area__message-container,' +
+    ' [data-test-selector="chat-scrollable-area__message-container"]';
+
+  /**
+   * Chat, however Twitch spells it today.
+   *
+   * `data-a-user` is the anchor a line is found by, and it is not chat's alone —
+   * a viewer card carries one too, and nothing says the next redesign will not put
+   * one somewhere in the middle of a channel page. A name found outside chat would
+   * send the walk up through a page that has no messages in it, so a line is only
+   * looked for inside something that says it is chat. Twitch names its own
+   * markup `chat-line__message`, `chat-room__content`, `video-chat__message-list`:
+   * the word survives the renames, which is why it is matched and not a class.
+   */
+  const CHAT_REGION = '[class*="chat" i], [data-a-target*="chat" i], [data-test-selector*="chat" i]';
+
+  /** A mention as chat writes it; logins are 3–25 characters of ASCII. */
+  const MENTION = /@([a-z0-9][a-z0-9_]{2,24})/gi;
+
+  function scanChat() {
+    const found = [];
+    const seen = new Set();
+
+    for (const seed of chatSeeds()) {
+      // A line is judged once and stamped, and in a busy chat almost every seed a
+      // pass sees has been judged already. The stamp is looked for before anything
+      // is measured or walked, since that is the whole of the work here.
+      const known = seed.closest('[data-as-chat]');
+      if (known && known.dataset.asChat === chatStamp(known) && !needsRepair(known)) continue;
+
+      if (known) {
+        // Judged under rules that have changed since — or it has changed shape,
+        // which is the more interesting half. If a selector below goes stale, the
+        // walk can settle on a message container that happened to hold a single
+        // line, and every line that arrives afterwards would land inside something
+        // already hidden. A container fills up and a message does not, so the
+        // answer is taken again from the name up as soon as one does.
+        clear(known);
+        delete known.dataset.asChat;
+      }
+
+      if (!seed.closest(CHAT_REGION)) continue;
+
+      const row = chatRow(seed);
+      if (!row || seen.has(row)) continue;
+      seen.add(row);
+      found.push({ row: row, height: row.offsetHeight });
+    }
+
+    for (const item of found) {
+      if (found.some((other) => other !== item && other.row.contains(item.row))) continue;
+
+      const author = authorOf(item.row);
+      const info = readCard(item.row);
+      const verdict = rules.checkMessage(author, info.title, mentionsIn(item.row, info.title));
+      apply(item.row, verdict, item.height);
+      // Stamped after, not before: covering a line puts the plate inside it, and the
+      // count has to be the one the next pass will see.
+      item.row.dataset.asChat = chatStamp(item.row);
+      stamped = true;
+    }
+  }
+
+  /**
+   * The rules a line was judged under, and the shape it had at the time. A message
+   * is not a grid cell — Twitch appends a line and drops it later rather than
+   * putting another message into the same one — so nothing else has to be in here.
+   */
+  function chatStamp(row) {
+    return token + ':' + row.childElementCount;
+  }
+
+  function chatSeeds() {
+    const seeds = [];
+    document.querySelectorAll(CHAT_SEEDS).forEach(function (node) {
+      seeds.push(node);
+    });
+    document.querySelectorAll(CHAT_LISTS).forEach(function (list) {
+      for (let row = list.firstElementChild; row; row = row.nextElementSibling) seeds.push(row);
+    });
+    return seeds;
+  }
+
+  /**
+   * The line a seed belongs to: the largest ancestor that is still one message.
+   *
+   * Every test is about the element being considered and never about where the
+   * walk started, so the same line found through the name inside it and found as a
+   * child of the message container stops in the same place — and is judged once
+   * instead of twice, with one plate instead of two.
+   */
+  function chatRow(seed) {
+    const author = authorOf(seed);
+    let node = seed;
+
+    for (let depth = 0; depth < 6; depth++) {
+      const parent = node.parentElement;
+      if (!parent || parent === document.body || parent === document.documentElement) break;
+      if (parent.matches(CHAT_STOPS)) break;
+      if (!isRow(parent, author)) break;
+      node = parent;
+    }
+    // A container child that turns out to be the list itself — a selector below has
+    // gone stale — is better left alone than covered whole.
+    return isRow(node, author) ? node : null;
+  }
+
+  function isRow(node, author) {
+    if (hasOtherAuthor(node, author)) return false;
+    if (node.querySelector(CHAT_FURNITURE)) return false;
+    // A line is a line even in a popout window three of them tall, so the ceiling
+    // is the taller of a screenful's worth and what a long message can reach.
+    return node.offsetHeight <= Math.max(400, window.innerHeight * 0.6);
+  }
+
+  /**
+   * True if [node] holds a name other than [author] — that is, more than the one
+   * message. With no author to compare against, two different names inside are the
+   * same answer.
+   */
+  function hasOtherAuthor(node, author) {
+    let only = '';
+    for (const name of node.querySelectorAll(CHAT_SEEDS)) {
+      const other = authorOf(name);
+      if (!other) continue;
+      if (author) {
+        if (other !== author) return true;
+      } else if (!only) {
+        only = other;
+      } else if (only !== other) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** The login behind a chat name, or '' when the markup does not say. */
+  function authorOf(node) {
+    const owner = node.closest('[data-a-user]') || node.querySelector('[data-a-user]');
+    if (owner) {
+      const login = (owner.getAttribute('data-a-user') || '').trim().toLowerCase();
+      if (login) return login;
+    }
+
+    // Nothing to read the login off, so the name it is. A localized display name
+    // carries the login after it in brackets, which is the one to take: it is what
+    // a roster is keyed by.
+    const intl = node.querySelector('.chat-author__intl-login');
+    const label = intl || (node.matches(CHAT_NAMES) ? node : node.querySelector(CHAT_NAMES));
+    if (!label) return '';
+
+    const text = (label.textContent || '').replace(/[()\s]/g, '').toLowerCase();
+    return /^[a-z0-9][a-z0-9_]{2,24}$/.test(text) ? text : '';
+  }
+
+  /** The channels a message names — by `@login`, or by a link to one. */
+  function mentionsIn(row, text) {
+    const logins = [];
+    MENTION.lastIndex = 0;
+    let hit;
+    while ((hit = MENTION.exec(text)) !== null) {
+      const login = hit[1].toLowerCase();
+      if (logins.indexOf(login) === -1) logins.push(login);
+    }
+    row.querySelectorAll(SEEDS).forEach(function (link) {
+      const login = loginFromHref(link.getAttribute('href'));
+      if (login && logins.indexOf(login) === -1) logins.push(login);
+    });
+    return logins;
+  }
+
   // ---------------------------------------------------------------- empty slots
 
   /**
@@ -403,7 +650,9 @@
    */
   function syncFillers() {
     const groups = new Map();
-    document.querySelectorAll('[data-as-state="hidden"]').forEach(function (card) {
+    // Chat is a column: a hidden line closes up behind itself and there is no width
+    // for anyone to hand out, so the stand-ins have no business there.
+    document.querySelectorAll('[data-as-state="hidden"]:not([data-as-chat])').forEach(function (card) {
       const parent = card.parentElement;
       if (!parent) return;
       const group = groups.get(parent);
@@ -632,6 +881,10 @@
         clear(card);
         delete card.dataset.asToken;
       });
+      document.querySelectorAll('[data-as-chat]').forEach(function (row) {
+        clear(row);
+        delete row.dataset.asChat;
+      });
       document.querySelectorAll('[data-as-filler]').forEach(function (filler) {
         filler.remove();
       });
@@ -679,7 +932,7 @@
         '<div class="as-page__caption"></div>' +
         '<div class="as-page__detail"></div>' +
         '<div class="as-page__channel"></div>' +
-        '<button type="button" class="as-page__back">' + AS.translate('btn_go_back', verdict.lang) + '</button>' +
+        '<button type="button" class="as-page__back"></button>' +
         '</div>';
       pageBlock.querySelector('.as-page__back').addEventListener('click', function () {
         if (history.length > 1) history.back();
@@ -693,6 +946,9 @@
     pageBlock.querySelector('.as-page__caption').textContent = verdict.caption;
     pageBlock.querySelector('.as-page__detail').textContent = verdict.detail;
     pageBlock.querySelector('.as-page__channel').textContent = 'twitch.tv/' + login;
+    // The panel outlives a change in the settings — it is only torn down when the
+    // address changes — so its own label is re-read on every pass, not just once.
+    pageBlock.querySelector('.as-page__back').textContent = AS.translate('btn_go_back', verdict.lang);
     pauseEverything();
   }
 

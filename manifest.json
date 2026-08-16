@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "AntiSquad — блокировка на Twitch",
-  "version": "1.0.1",
-  "description": "Убирает команды Twitch целиком — всех участников разом — и трансляции по словам: скрывает или закрывает красной заглушкой.",
+  "version": "1.1.0",
+  "description": "Убирает команды Twitch целиком — всех участников разом — трансляции по словам и их сообщения в чате: скрывает или закрывает красной заглушкой.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -15,7 +15,8 @@
       "matches": [
         "https://www.twitch.tv/*",
         "https://twitch.tv/*",
-        "https://m.twitch.tv/*"
+        "https://m.twitch.tv/*",
+        "https://dashboard.twitch.tv/*"
       ],
       "js": [
         "src/common/browser.js",
@@ -31,7 +32,7 @@
       ],
       "css": ["src/content/content.css"],
       "run_at": "document_start",
-      "all_frames": false
+      "all_frames": true
     }
   ],
   "action": {
