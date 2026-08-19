@@ -2,7 +2,7 @@
   'use strict';
 
   AS.LOCALES = AS.LOCALES || {};
-  AS.SUPPORTED_LANGS = ['en', 'ru'];
+  AS.SUPPORTED_LANGS = ['en', 'ru']; // New localization files should be mentioned here.
   AS.loadAllTranslations = function () {
     const promises = AS.SUPPORTED_LANGS.map(function (lang) {
       return new Promise(function (resolve) {

@@ -117,6 +117,136 @@ section:last-of-type {
   border-bottom: 0;
 }
 
+.icon-language {
+  width: 18px;
+  height: 18px;
+  background-color: var(--muted);
+  
+  mask-image: url("../../icons/ui/languages.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+
+  -webkit-mask-image: url("../../icons/ui/languages.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.icon-action {
+  width: 18px;
+  height: 18px;
+  background-color: var(--muted);
+  
+  mask-image: url("../../icons/ui/sword.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+
+  -webkit-mask-image: url("../../icons/ui/sword.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.icon-tag {
+  width: 18px;
+  height: 18px;
+  background-color: var(--muted);
+
+  mask-image: url("../../icons/ui/tag.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+
+  -webkit-mask-image: url("../../icons/ui/tag.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.icon-team {
+  width: 18px;
+  height: 18px;
+  background-color: var(--muted);
+  
+  mask-image: url("../../icons/ui/users.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+
+  -webkit-mask-image: url("../../icons/ui/users.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.icon-hide {
+  width: 24px;
+  height: 24px;
+  background-color: var(--text);
+  
+  mask-image: url("../../icons/ui/eye-off.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+
+  -webkit-mask-image: url("../../icons/ui/eye-off.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+.icon-cover {
+  width: 24px;
+  height: 24px;
+  background-color: var(--text);
+  
+  mask-image: url("../../icons/ui/ban.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+
+  -webkit-mask-image: url("../../icons/ui/ban.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.icon-add {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background-color: var(--text);
+  
+  mask-image: url("../../icons/ui/plus.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+
+  -webkit-mask-image: url("../../icons/ui/plus.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.icon-check {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  transform: translateY(2px);
+  background-color: var(--accent);
+  
+  mask-image: url("../../icons/ui/check.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+
+  -webkit-mask-image: url("../../icons/ui/check.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
 h2 {
   margin: 0 0 6px;
   font-size: 12px;
@@ -203,6 +333,17 @@ h2 {
   line-height: 1;
 }
 
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.section-title h2 {
+  margin: 0;
+}
+
 .select {
   width: 100%;
   padding: 8px 32px 8px 10px;
@@ -278,6 +419,13 @@ button:disabled {
   opacity: 0.5;
   cursor: default;
   filter: none;
+}
+
+form.add button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .foot {
